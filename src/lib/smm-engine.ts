@@ -1,4 +1,5 @@
 // SMM Automation Engine - runs entirely in the browser
+import { smmApiCall } from "@/lib/smm-api";
 
 export interface SMMConfig {
   apiUrl: string;
@@ -75,21 +76,7 @@ function getPhase(elapsedHours: number): PhaseInfo | null {
 }
 
 async function sendOrder(config: SMMConfig, serviceId: string, link: string, quantity: number) {
-  const body = new URLSearchParams({
-    key: config.apiKey,
-    action: "add",
-    service: serviceId,
-    link,
-    quantity: String(quantity),
-  });
-
-  const res = await fetch(config.apiUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
-
-  return res.json();
+  return smmApiCall(config.apiUrl, config.apiKey, "add", { service: serviceId, link, quantity });
 }
 
 export type CampaignCallbacks = {

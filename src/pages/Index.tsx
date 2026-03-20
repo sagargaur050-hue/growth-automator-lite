@@ -6,6 +6,7 @@ import { PhaseTimeline } from "@/components/PhaseTimeline";
 import { LogConsole } from "@/components/LogConsole";
 import { Campaign, type LogEntry, type SMMConfig } from "@/lib/smm-engine";
 import { Play, Square, Zap, Link2, Key, Settings2, Wallet } from "lucide-react";
+import { smmApiCall } from "@/lib/smm-api";
 
 export default function Index() {
   const [apiUrl, setApiUrl] = useState("https://smmsocialmedia.in/api/v2");
@@ -30,14 +31,8 @@ export default function Index() {
     if (!apiKey || !apiUrl) return;
     setBalanceLoading(true);
     try {
-      const body = new URLSearchParams({ key: apiKey, action: "balance" });
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      });
-      const data = await res.json();
-      setBalance(data.balance ?? data.currency ? `${data.balance} ${data.currency}` : JSON.stringify(data));
+      const data = await smmApiCall(apiUrl, apiKey, "balance");
+      setBalance(data.balance != null ? `${data.balance} ${data.currency ?? ""}`.trim() : JSON.stringify(data));
     } catch (err: any) {
       setBalance("Error: " + err.message);
     }
