@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { PhaseTimeline } from "@/components/PhaseTimeline";
 import { LogConsole } from "@/components/LogConsole";
 import { Campaign, type LogEntry, type SMMConfig } from "@/lib/smm-engine";
-import { Play, Square, Zap, Link2, Key, Settings2 } from "lucide-react";
+import { Play, Square, Zap, Link2, Key, Settings2, Wallet } from "lucide-react";
 
 export default function Index() {
   const [apiUrl, setApiUrl] = useState("https://smmsocialmedia.in/api/v2");
@@ -23,6 +23,26 @@ export default function Index() {
   const [elapsedHours, setElapsedHours] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const campaignRef = useRef<Campaign | null>(null);
+  const [balance, setBalance] = useState<string | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
+  const checkBalance = useCallback(async () => {
+    if (!apiKey || !apiUrl) return;
+    setBalanceLoading(true);
+    try {
+      const body = new URLSearchParams({ key: apiKey, action: "balance" });
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+      const data = await res.json();
+      setBalance(data.balance ?? data.currency ? `${data.balance} ${data.currency}` : JSON.stringify(data));
+    } catch (err: any) {
+      setBalance("Error: " + err.message);
+    }
+    setBalanceLoading(false);
+  }, [apiKey, apiUrl]);
 
   const handleStart = useCallback(() => {
     const links = linksText
@@ -82,6 +102,17 @@ export default function Index() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">SMM Growth Engine</h1>
             <p className="text-sm text-muted-foreground">12-hour organic growth automation</p>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            {balance !== null && (
+              <span className="text-sm font-mono text-primary bg-primary/10 px-3 py-1.5 rounded-lg">
+                💰 {balance}
+              </span>
+            )}
+            <Button variant="outline" size="sm" onClick={checkBalance} disabled={balanceLoading || !apiKey} className="gap-2">
+              <Wallet className="w-4 h-4" />
+              {balanceLoading ? "Checking..." : "Check Balance"}
+            </Button>
           </div>
         </div>
 
