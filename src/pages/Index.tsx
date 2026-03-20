@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,17 @@ export default function Index() {
   const [linkStatuses, setLinkStatuses] = useState<{ url: string; phase: string; elapsed: string; completed: boolean }[]>([]);
   const [balance, setBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [nextOrderSecs, setNextOrderSecs] = useState(0);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!running) { setNextOrderSecs(0); return; }
+    const interval = setInterval(() => {
+      const secs = campaignRef.current?.getSecondsToNextOrder() ?? 0;
+      setNextOrderSecs(secs);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running]);
 
   const checkBalance = useCallback(async () => {
     if (!apiKey || !apiUrl) return;
@@ -129,11 +140,12 @@ export default function Index() {
 
         {/* Stats bar */}
         {running && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             {[
               { label: "Phase", value: currentPhase },
               { label: "Elapsed", value: `${elapsedHours.toFixed(1)}h` },
               { label: "Orders Sent", value: totalOrders },
+              { label: "Next Order", value: nextOrderSecs > 0 ? `${Math.floor(nextOrderSecs / 60)}m ${nextOrderSecs % 60}s` : "Now..." },
             ].map((s) => (
               <Card key={s.label} className="border-border">
                 <CardContent className="p-4 text-center">

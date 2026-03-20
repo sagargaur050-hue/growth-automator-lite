@@ -130,6 +130,14 @@ export class Campaign {
     return [...this.trackedLinks];
   }
 
+  /** Returns seconds until the next order, or 0 if processing now */
+  getSecondsToNextOrder(): number {
+    const active = this.trackedLinks.filter((t) => !t.completed);
+    if (active.length === 0) return 0;
+    const nearest = Math.min(...active.map((t) => t.nextProcessAt));
+    return Math.max(0, Math.ceil((nearest - Date.now()) / 1000));
+  }
+
   private linkElapsedHours(link: TrackedLink) {
     return (Date.now() - link.addedAt) / 3600000;
   }
