@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { PhaseTimeline } from "@/components/PhaseTimeline";
 import { LogConsole } from "@/components/LogConsole";
 import { Campaign, type LogEntry, type SMMConfig } from "@/lib/smm-engine";
-import { Play, Square, Zap, Link2, Key, Settings2 } from "lucide-react";
+import { Play, Square, Zap, Link2, Key, Settings2, Wallet } from "lucide-react";
 
 export default function Index() {
   const [apiUrl, setApiUrl] = useState("https://smmsocialmedia.in/api/v2");
