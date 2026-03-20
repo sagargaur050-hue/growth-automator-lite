@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhaseTimeline } from "@/components/PhaseTimeline";
 import { LogConsole } from "@/components/LogConsole";
+import { AddLinksForm } from "@/components/AddLinksForm";
 import { Campaign, type LogEntry, type SMMConfig } from "@/lib/smm-engine";
 import { Play, Square, Zap, Link2, Key, Settings2, Wallet } from "lucide-react";
 import { smmApiCall } from "@/lib/smm-api";
@@ -24,6 +25,7 @@ export default function Index() {
   const [elapsedHours, setElapsedHours] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const campaignRef = useRef<Campaign | null>(null);
+  const [activeLinks, setActiveLinks] = useState<string[]>([]);
   const [balance, setBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
@@ -65,6 +67,7 @@ export default function Index() {
     setTotalOrders(0);
     setCurrentPhase("Warm Start");
     setElapsedHours(0);
+    setActiveLinks([...links]);
 
     const campaign = new Campaign(config, {
       onLog: (entry) => setLogs((prev) => [...prev, entry]),
@@ -86,6 +89,15 @@ export default function Index() {
   const handleStop = useCallback(() => {
     campaignRef.current?.abort();
     setRunning(false);
+    setActiveLinks([]);
+  }, []);
+
+  const handleAddLinks = useCallback((newLinks: string[]) => {
+    const campaign = campaignRef.current;
+    if (!campaign) return 0;
+    const added = campaign.addLinks(newLinks);
+    setActiveLinks(campaign.getLinks());
+    return added;
   }, []);
 
   return (
@@ -136,6 +148,11 @@ export default function Index() {
               <PhaseTimeline currentPhase={currentPhase} elapsedHours={elapsedHours} />
             </CardContent>
           </Card>
+        )}
+
+        {/* Add more links while running */}
+        {running && (
+          <AddLinksForm onAddLinks={handleAddLinks} currentLinks={activeLinks} />
         )}
 
         {/* Config section */}

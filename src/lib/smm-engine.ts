@@ -97,6 +97,16 @@ export class Campaign {
     this.aborted = true;
   }
 
+  addLinks(newLinks: string[]) {
+    const unique = newLinks.filter((l) => !this.config.links.includes(l));
+    this.config.links.push(...unique);
+    return unique.length;
+  }
+
+  getLinks() {
+    return [...this.config.links];
+  }
+
   private elapsed() {
     return ((Date.now() - this.startTime) / 60000).toFixed(1) + "m";
   }
