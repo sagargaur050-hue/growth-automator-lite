@@ -150,6 +150,11 @@ export default function Index() {
           </Card>
         )}
 
+        {/* Add more links while running */}
+        {running && (
+          <AddLinksForm onAddLinks={handleAddLinks} currentLinks={activeLinks} />
+        )}
+
         {/* Config section */}
         {!running && (
           <div className="grid md:grid-cols-2 gap-4">
