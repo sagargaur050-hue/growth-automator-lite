@@ -29,6 +29,17 @@ export default function Index() {
   const [linkStatuses, setLinkStatuses] = useState<{ url: string; phase: string; elapsed: string; completed: boolean }[]>([]);
   const [balance, setBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [nextOrderSecs, setNextOrderSecs] = useState(0);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!running) { setNextOrderSecs(0); return; }
+    const interval = setInterval(() => {
+      const secs = campaignRef.current?.getSecondsToNextOrder() ?? 0;
+      setNextOrderSecs(secs);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running]);
 
   const checkBalance = useCallback(async () => {
     if (!apiKey || !apiUrl) return;
