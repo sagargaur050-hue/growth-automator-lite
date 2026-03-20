@@ -23,6 +23,26 @@ export default function Index() {
   const [elapsedHours, setElapsedHours] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const campaignRef = useRef<Campaign | null>(null);
+  const [balance, setBalance] = useState<string | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
+  const checkBalance = useCallback(async () => {
+    if (!apiKey || !apiUrl) return;
+    setBalanceLoading(true);
+    try {
+      const body = new URLSearchParams({ key: apiKey, action: "balance" });
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+      const data = await res.json();
+      setBalance(data.balance ?? data.currency ? `${data.balance} ${data.currency}` : JSON.stringify(data));
+    } catch (err: any) {
+      setBalance("Error: " + err.message);
+    }
+    setBalanceLoading(false);
+  }, [apiKey, apiUrl]);
 
   const handleStart = useCallback(() => {
     const links = linksText
