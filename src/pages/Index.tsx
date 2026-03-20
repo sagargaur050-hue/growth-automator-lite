@@ -67,6 +67,7 @@ export default function Index() {
     setTotalOrders(0);
     setCurrentPhase("Warm Start");
     setElapsedHours(0);
+    setActiveLinks([...links]);
 
     const campaign = new Campaign(config, {
       onLog: (entry) => setLogs((prev) => [...prev, entry]),
