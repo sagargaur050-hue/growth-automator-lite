@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhaseTimeline } from "@/components/PhaseTimeline";
 import { LogConsole } from "@/components/LogConsole";
+import { AddLinksForm } from "@/components/AddLinksForm";
 import { Campaign, type LogEntry, type SMMConfig } from "@/lib/smm-engine";
 import { Play, Square, Zap, Link2, Key, Settings2, Wallet } from "lucide-react";
 import { smmApiCall } from "@/lib/smm-api";
