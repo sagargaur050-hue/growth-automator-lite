@@ -79,16 +79,25 @@ async function sendOrder(config: SMMConfig, serviceId: string, link: string, qua
   return smmApiCall(config.apiUrl, config.apiKey, "add", { service: serviceId, link, quantity });
 }
 
+export interface TrackedLink {
+  url: string;
+  addedAt: number; // timestamp when added
+  nextProcessAt: number; // timestamp for next processing
+  completed: boolean;
+}
+
 export type CampaignCallbacks = {
   onLog: (entry: LogEntry) => void;
   onPhaseChange: (phase: string, elapsedHours: number) => void;
   onProgress: (elapsedHours: number, totalOrders: number) => void;
   onComplete: () => void;
+  onLinksUpdate: (links: TrackedLink[]) => void;
 };
 
 export class Campaign {
   private aborted = false;
-  private startTime = 0;
+  private campaignStart = 0;
+  private trackedLinks: TrackedLink[] = [];
   totalOrders = 0;
 
   constructor(private config: SMMConfig, private cb: CampaignCallbacks) {}
@@ -98,60 +107,111 @@ export class Campaign {
   }
 
   addLinks(newLinks: string[]) {
-    const unique = newLinks.filter((l) => !this.config.links.includes(l));
-    this.config.links.push(...unique);
+    const now = Date.now();
+    const existingUrls = new Set(this.trackedLinks.map((t) => t.url));
+    const unique = newLinks.filter((l) => !existingUrls.has(l));
+    for (const url of unique) {
+      this.trackedLinks.push({
+        url,
+        addedAt: now,
+        nextProcessAt: now,
+        completed: false,
+      });
+    }
+    this.cb.onLinksUpdate([...this.trackedLinks]);
     return unique.length;
   }
 
   getLinks() {
-    return [...this.config.links];
+    return this.trackedLinks.map((t) => t.url);
   }
 
-  private elapsed() {
-    return ((Date.now() - this.startTime) / 60000).toFixed(1) + "m";
+  getTrackedLinks() {
+    return [...this.trackedLinks];
   }
 
-  private elapsedHours() {
-    return (Date.now() - this.startTime) / 3600000;
+  private linkElapsedHours(link: TrackedLink) {
+    return (Date.now() - link.addedAt) / 3600000;
+  }
+
+  private formatElapsed(link: TrackedLink) {
+    return ((Date.now() - link.addedAt) / 60000).toFixed(1) + "m";
   }
 
   async run() {
-    this.startTime = Date.now();
+    this.campaignStart = Date.now();
     this.aborted = false;
     this.totalOrders = 0;
 
+    // Initialize tracked links from config
+    const now = Date.now();
+    for (const url of this.config.links) {
+      this.trackedLinks.push({
+        url,
+        addedAt: now,
+        nextProcessAt: now,
+        completed: false,
+      });
+    }
+    this.cb.onLinksUpdate([...this.trackedLinks]);
+
     while (!this.aborted) {
-      const hours = this.elapsedHours();
-      if (hours >= 12) break;
+      const activeLinks = this.trackedLinks.filter((t) => !t.completed);
+      if (activeLinks.length === 0) break;
 
-      const phase = getPhase(hours);
-      if (!phase) break;
+      // Find the link that needs processing soonest
+      const nowTs = Date.now();
+      const ready = activeLinks.filter((t) => t.nextProcessAt <= nowTs);
 
-      this.cb.onPhaseChange(phase.name, hours);
-
-      for (let i = 0; i < this.config.links.length; i++) {
-        if (this.aborted) return;
-        if (i > 0) await sleep(rand(2000, 5000));
-        await this.processLink(this.config.links[i], i, phase);
+      if (ready.length === 0) {
+        // Wait for the next link to be ready
+        await sleep(1000);
+        continue;
       }
 
-      this.cb.onProgress(this.elapsedHours(), this.totalOrders);
+      for (const tracked of ready) {
+        if (this.aborted) return;
 
-      const interval = rand(phase.intervalMin[0], phase.intervalMin[1]) * 60000;
-      const jitter = interval * 0.1;
-      const wait = interval + rand(-jitter, jitter);
+        const hours = this.linkElapsedHours(tracked);
+        if (hours >= 12) {
+          tracked.completed = true;
+          this.cb.onLinksUpdate([...this.trackedLinks]);
+          continue;
+        }
 
-      // Wait in small chunks so we can abort
-      const end = Date.now() + wait;
-      while (Date.now() < end && !this.aborted) {
-        await sleep(1000);
+        const phase = getPhase(hours);
+        if (!phase) {
+          tracked.completed = true;
+          this.cb.onLinksUpdate([...this.trackedLinks]);
+          continue;
+        }
+
+        const linkIdx = this.trackedLinks.indexOf(tracked);
+        this.cb.onPhaseChange(phase.name, hours);
+
+        await this.processLink(tracked, linkIdx, phase);
+
+        // Schedule next processing for this link
+        const interval = rand(phase.intervalMin[0], phase.intervalMin[1]) * 60000;
+        const jitter = interval * 0.1;
+        tracked.nextProcessAt = Date.now() + interval + rand(-jitter, jitter);
+
+        this.cb.onProgress(
+          (Date.now() - this.campaignStart) / 3600000,
+          this.totalOrders
+        );
+
+        // Small delay between processing different links
+        if (ready.indexOf(tracked) < ready.length - 1) {
+          await sleep(rand(2000, 5000));
+        }
       }
     }
 
     this.cb.onComplete();
   }
 
-  private async processLink(link: string, idx: number, phase: PhaseInfo) {
+  private async processLink(tracked: TrackedLink, idx: number, phase: PhaseInfo) {
     const types: { key: keyof SMMConfig["serviceIds"]; label: string; range: [number, number] | null }[] = [
       { key: "views", label: "👁 Views", range: phase.views },
       { key: "likes", label: "❤️ Likes", range: phase.likes },
@@ -164,13 +224,11 @@ export class Campaign {
       if (this.aborted) return;
       if (!t.range) continue;
       let qty = rand(t.range[0], t.range[1]);
-      // Enforce minimums for shares and repost
       if (t.key === "shares" || t.key === "repost") qty = Math.max(1, qty);
-      if (qty <= 0) continue;
       if (qty <= 0) continue;
 
       const entry: LogEntry = {
-        time: this.elapsed(),
+        time: this.formatElapsed(tracked),
         phase: phase.name,
         link: idx + 1,
         type: t.label,
@@ -180,7 +238,7 @@ export class Campaign {
       this.cb.onLog({ ...entry });
 
       try {
-        const res = await sendOrder(this.config, this.config.serviceIds[t.key], link, qty);
+        const res = await sendOrder(this.config, this.config.serviceIds[t.key], tracked.url, qty);
         entry.status = "success";
         entry.response = JSON.stringify(res);
         this.totalOrders++;
