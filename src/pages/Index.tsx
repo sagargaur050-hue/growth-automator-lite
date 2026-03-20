@@ -89,6 +89,15 @@ export default function Index() {
   const handleStop = useCallback(() => {
     campaignRef.current?.abort();
     setRunning(false);
+    setActiveLinks([]);
+  }, []);
+
+  const handleAddLinks = useCallback((newLinks: string[]) => {
+    const campaign = campaignRef.current;
+    if (!campaign) return 0;
+    const added = campaign.addLinks(newLinks);
+    setActiveLinks(campaign.getLinks());
+    return added;
   }, []);
 
   return (
