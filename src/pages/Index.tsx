@@ -25,6 +25,7 @@ export default function Index() {
   const [elapsedHours, setElapsedHours] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const campaignRef = useRef<Campaign | null>(null);
+  const [activeLinks, setActiveLinks] = useState<string[]>([]);
   const [balance, setBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
