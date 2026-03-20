@@ -81,6 +81,9 @@ export default function Index() {
         setTotalOrders(orders);
       },
       onComplete: () => setRunning(false),
+      onLinksUpdate: (links) => {
+        setActiveLinks(links.map((l) => l.url));
+      },
     });
 
     campaignRef.current = campaign;
