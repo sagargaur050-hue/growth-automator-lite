@@ -103,6 +103,17 @@ export default function Index() {
             <h1 className="text-2xl font-bold tracking-tight">SMM Growth Engine</h1>
             <p className="text-sm text-muted-foreground">12-hour organic growth automation</p>
           </div>
+          <div className="ml-auto flex items-center gap-3">
+            {balance !== null && (
+              <span className="text-sm font-mono text-primary bg-primary/10 px-3 py-1.5 rounded-lg">
+                💰 {balance}
+              </span>
+            )}
+            <Button variant="outline" size="sm" onClick={checkBalance} disabled={balanceLoading || !apiKey} className="gap-2">
+              <Wallet className="w-4 h-4" />
+              {balanceLoading ? "Checking..." : "Check Balance"}
+            </Button>
+          </div>
         </div>
 
         {/* Stats bar */}
