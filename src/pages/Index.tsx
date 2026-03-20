@@ -26,6 +26,7 @@ export default function Index() {
   const [totalOrders, setTotalOrders] = useState(0);
   const campaignRef = useRef<Campaign | null>(null);
   const [activeLinks, setActiveLinks] = useState<string[]>([]);
+  const [linkStatuses, setLinkStatuses] = useState<{ url: string; phase: string; elapsed: string; completed: boolean }[]>([]);
   const [balance, setBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
