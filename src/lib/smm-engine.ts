@@ -166,7 +166,10 @@ export class Campaign {
     for (const t of types) {
       if (this.aborted) return;
       if (!t.range) continue;
-      const qty = rand(t.range[0], t.range[1]);
+      let qty = rand(t.range[0], t.range[1]);
+      // Enforce minimums for shares and repost
+      if (t.key === "shares" || t.key === "repost") qty = Math.max(1, qty);
+      if (qty <= 0) continue;
       if (qty <= 0) continue;
 
       const entry: LogEntry = {
