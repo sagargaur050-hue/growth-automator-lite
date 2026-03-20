@@ -1,4 +1,5 @@
 // SMM Automation Engine - runs entirely in the browser
+import { smmApiCall } from "@/lib/smm-api";
 
 export interface SMMConfig {
   apiUrl: string;
