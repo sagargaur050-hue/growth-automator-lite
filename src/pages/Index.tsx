@@ -11,11 +11,11 @@ export default function Index() {
   const [apiUrl, setApiUrl] = useState("https://example-smm-panel.com/api/v2");
   const [apiKey, setApiKey] = useState("");
   const [linksText, setLinksText] = useState("");
-  const [viewsId, setViewsId] = useState("");
-  const [likesId, setLikesId] = useState("");
-  const [sharesId, setSharesId] = useState("");
-  const [savesId, setSavesId] = useState("");
-  const [repostId, setRepostId] = useState("");
+  const [viewsId, setViewsId] = useState("5245");
+  const [likesId, setLikesId] = useState("5392");
+  const [sharesId, setSharesId] = useState("4436");
+  const [savesId, setSavesId] = useState("287");
+  const [repostId, setRepostId] = useState("5361");
 
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
