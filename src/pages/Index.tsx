@@ -8,8 +8,8 @@ import { Campaign, type LogEntry, type SMMConfig } from "@/lib/smm-engine";
 import { Play, Square, Zap, Link2, Key, Settings2 } from "lucide-react";
 
 export default function Index() {
-  const [apiUrl, setApiUrl] = useState("https://example-smm-panel.com/api/v2");
-  const [apiKey, setApiKey] = useState("");
+  const [apiUrl, setApiUrl] = useState("https://smmsocialmedia.in/api/v2");
+  const [apiKey, setApiKey] = useState("0a2b5a4e61c68e02e81c9b8127d4b68d");
   const [linksText, setLinksText] = useState("");
   const [viewsId, setViewsId] = useState("5245");
   const [likesId, setLikesId] = useState("5392");
