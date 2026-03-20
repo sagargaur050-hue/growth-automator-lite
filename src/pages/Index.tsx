@@ -140,11 +140,12 @@ export default function Index() {
 
         {/* Stats bar */}
         {running && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             {[
               { label: "Phase", value: currentPhase },
               { label: "Elapsed", value: `${elapsedHours.toFixed(1)}h` },
               { label: "Orders Sent", value: totalOrders },
+              { label: "Next Order", value: nextOrderSecs > 0 ? `${Math.floor(nextOrderSecs / 60)}m ${nextOrderSecs % 60}s` : "Now..." },
             ].map((s) => (
               <Card key={s.label} className="border-border">
                 <CardContent className="p-4 text-center">
